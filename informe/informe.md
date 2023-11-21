@@ -53,7 +53,17 @@ Para poder hacerlo, hay algunas opciones:
 2. Adaptar la red para el sample rate y tamaño original de aquello que querramos encodear.
 3. Adaptar el sample rate que viene por defecto al del audio que querramos encodear, y reducir el tamaño del mismo a los requisitos de la red (recortandolo a 5s como los demás).
 
-Nosotros realizamos ??? y pudimos lograr encodear música nueva. A modo de ejemplo, podemos ver los audios obtenidos a partir de la canción ????
+Tras el siguiente proceso pudimos encodear música nueva.
+
+1. Entrenar la red normalmente, con el dataset otorgado.
+2. Nuestro audio era stereo (2 channels) así que lo pasamos a mono con un convertidor online.
+3. Una vez convertido a mono, cortamos un fragmento de 5 segundos con el código provisto.
+4. Así, el vector era de tamaño 1x1x220500, que no cumple con las características que necesita la red (1x1x110250). Para solventarlo, utilizamos la función de Resampling de PyTorch, obteniendo así un vector con las características necesarias.
+5. Realizamos un forward en la red con nuestro vector de audio nuevo una vez que cumplía las características necesarias.
+6. Obtuvimos el audio reconstruido, así como su espectograma y waveform.
+7. Repetimos el proceso para distintos tamaños de vectores latentes y obtuvimos los que se pueden ver en la siguiente tabla.
+
+No tuvimos problemas con el sample rate, pero podría haber llegado a tener que editarse, pues este se encuentra hardcodeado en 22050. En nuestro caso funcionó correctamente sin cambiarlo, ya que al hacer el re-sampling paso de 44100 a 20500.
 
 ¿Quizás agregar a la tabla los parámetros? (in/out channels, kernel size, stride, etc)
 
