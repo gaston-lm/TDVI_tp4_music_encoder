@@ -17,8 +17,6 @@ Para este primer inciso, utilizamos una red sencilla, muy similar a los autoenco
 
 En un principio, pudimos notar que la estrategia de hacer muchos canales en un inicio y luego disminuirlos no nos dió buenos resultados. Por ello, probamos ir disminuyendo de a poco o mantener los canales a lo largo de la red, para finalmente flattenear el vector y obtener así nuestro vector latente. Realizamos esto con distintos parámetros que nos dejaron vectores latentes de distintos tamaños, hasta llegar al punto de que la canción sea prácticamente irreconocible. Los audios resultantes se pueden ver en la siguiente tabla, que utiliza Music - Maddona como ejemplo.
 
-¿Quizás agregar a la tabla los parámetros? (in/out channels, kernel size, stride, etc)
-
 |    Vector latente     |   |
 |:----------------------|--:|
 | 1x110250 (Original)   | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/13dINLPdNFMA_Rz2TYi6Tr5xfH0_xIw-c/view) |
@@ -82,7 +80,6 @@ Tras el siguiente proceso pudimos encodear música nueva.
 
 Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nuestro nuevo audio funcionaba con el sample rate de 20500 tras hacer el resampling, lo cual nos da mas certeza de que nuestra hipótesis sobre la diferencia del tamaño es correcta.
 
-¿Quizás agregar a la tabla los parámetros? (in/out channels, kernel size, stride, etc)
 
 |    Vector latente     |   |
 |:----------------------|--:|
@@ -94,11 +91,15 @@ Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nues
 | 1x18376                    | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1iKh6sA3N_pj4wPND89SY3ncuAebUHag-/view) |
 | 1x9184                     | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1vzabQcLiIM83eEDDUIXcQQewkxDjrhkz/view) |
 
-# Generación de música nueva.
+# Generación de música nueva
 
 Hemos visto en clase como este tipo de autoencoders que hemos programado, no son lo mejor para generar algo nuevo. Es por eso, que han surgido otros modelos, como pueden ser VAE o GAN. Sin embargo, se pueden probar cosas como generar vectores random del tamaño del espacio latente y pasarlos por el decoder o incluso promediar vectores latentes de otras canciones y decodearlos. 
 
-Este tipo de cosas son las que probamos hacer y, si bien lo obtenido no es lo mas satisfactorio, logramos generar audio completamente nuevo a partir de nuestra red. Se pueden escuchar los audios obtenidos en la siguiente tabla:
+Este tipo de cosas son las que probamos hacer y, si bien lo obtenido no es lo mas satisfactorio, logramos generar audio completamente nuevo a partir de nuestra red.
+
+## Promediando vectores latentes de canciones existentes y decodeandolos
+
+Para esto realizamos el forward en testing con la red entrenada, nos guardamos los vectores latentes que quedaban tras el encoding, agarramos los primeros tres y los promediamos. Luego, pasamos esos nuevos vectores latentes por el decoder. Los resultados se pueden escuchar en la siguiente tabla.
 
 |    Vector latente     |   |
 |:----------------------|--:|
@@ -109,13 +110,21 @@ Este tipo de cosas son las que probamos hacer y, si bien lo obtenido no es lo ma
 | 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1he1mJwi92Qtt95sVPn0LRAQI-YC0MCfH/view) |
 | 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1-8SM5pMs8vOZSLXxOH3wCtGWIl2ycoSL/view) |
 
-(copie siempre la misma tabla por las dudas, me parece una buena manera de mostrar los resultados pero lo podemos cambiar si se nos ocurre algo mejor)
+## Generando nuevos vectores latentes de manera aleatoria
+
+Para este test, generamos vectores aleatorios del tamaño que quedan los vectores latentes para las distintas redes y pasamos esos vectores por el decoder (entrenado con el dataset original). Logramos ver por qué se nos había dicho que este modelo no era lo mas interesante para generación, ya que obtuvimos simplemente "ruido blanco". No varió mucho con los distintos modelos, pero de todas formas dejamos los resultados en la siguiente tabla.
+
+|    Vector latente     |   |
+|:----------------------|--:|
+| 1x110250 (Original)   | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/13dINLPdNFMA_Rz2TYi6Tr5xfH0_xIw-c/view) |
+| 1x55112               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1cnege9wbLe6OsE1E8LDJliZn1zqfrBRD/view) |
+| 1x32151               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1jql5XVD3KKCA10C2dFdnZXvLSiJ9QSPX/view) |
+| 1x24496               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1UY3wKQtwLF5gk3JVnVQCwwSjJQL_2Dgl/view) |
+| 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1he1mJwi92Qtt95sVPn0LRAQI-YC0MCfH/view) |
+| 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1-8SM5pMs8vOZSLXxOH3wCtGWIl2ycoSL/view) |
 
 # Cosas que faltan
 
-- En 4: 
-    - agregar lo de vector random
-    - explicar un poco ambos procesos y las tablas
 - En 1: 
     - justificar mejor elección de epoch (ya está la imagen)
     - Hacer referente a que los parametros de la arquitectura en el notebook
