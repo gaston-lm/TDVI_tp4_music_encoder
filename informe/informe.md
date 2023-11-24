@@ -9,13 +9,17 @@ lang: "es"
 
 # Encodear canciones en vectores latentes
 
-Para este primer inciso, utilizamos una red sencilla, muy similar a los autoencoders vistos en clase, utilizando la estructura que se puede ver en la figura 1.
+Para este primer inciso, dado que en principio no teníamos mucha información acerca de qué tipo de estructuras de redes eran convenientes para este tipo de problemas, nos enfocamos en primer lugar de tener un código del modelo y entrenamiento que funcione correctamente. Una vez alcanzado ese objetivo, procedimos a probar algunas ideas registrando los experimentos con la herramienta `wandb`.
 
-![Estructura autoencoder](estructura.png){ width=350px }
+Luego de un poco de investigación acerca de autoencoders para audio[^1] y algunos experimentos más, concluimos en una arquitectura de una red sencilla, muy similar a los autoencoders vistos en clase, utilizando la estructura que se puede ver en la figura 1.
 
-![Función de pérdida en validación para cada época](val_loss_final_exp.png){ width=350px }
+![Estructura autoencoder](estructura_white.png){ width=350px }
 
-En un principio, pudimos notar que la estrategia de hacer muchos canales en un inicio y luego disminuirlos no nos dió buenos resultados. Por ello, probamos ir disminuyendo de a poco o mantener los canales a lo largo de la red, para finalmente flattenear el vector y obtener así nuestro vector latente. Realizamos esto con distintos parámetros que nos dejaron vectores latentes de distintos tamaños, hasta llegar al punto de que la canción sea prácticamente irreconocible. Los audios resultantes se pueden ver en la siguiente tabla, que utiliza Music - Maddona como ejemplo.
+Principalmente, pudimos identificar que una de las consideraciones más importantates a tener en cuenta era la forma en la que se reducía la dimensionalidad a lo largo de las capas covolucionales. Realizar en primera instancia una capa que aumentara la dimensión a más de 1x110250, ya sea por muchos canales de salida o por un stride chico, para luego reducirla abruptamente en las siguientes dos capas, generaba bastante ruido. En cambio, hacer que la primera capa tal vez no reduzca casi nada la dimensionalidad, pero sí reorganice la información en varios canales para luego reducir la dimensionalidad en las siguientes dos capas genera mejores resultados. 
+
+Esta estrategia de ir disminuyendo de a poco o mantener los canales a lo largo de la red, para finalmente flattenear el vector y obtener así nuestro vector latente, nos dio en general buenas codificaciones. Por ese motivo, seguimos con esta estrategia pero modificando los parámetros de la convoluciones (`output_channels`, `input_channels`, `stride`, `kernel_size` y `stride`). Por esta razón, por fines prácticos y de facilidad de probar varias alternativas, generamos variables en el código que definen estos hiperparámetros de las capas convolucionales.
+
+Con distintas combinaciones de los hiperparámetros de las capas convolucionales realizamos experimentos que dejaran vectores latentes de distintos tamaños, hasta llegar al punto de que la canción sea prácticamente irreconocible. Los audios resultantes se pueden ver en la siguiente tabla, que utiliza la canción Music de Maddona como ejemplo.
 
 |    Vector latente     |   |
 |:----------------------|--:|
@@ -26,37 +30,41 @@ En un principio, pudimos notar que la estrategia de hacer muchos canales en un i
 | 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1he1mJwi92Qtt95sVPn0LRAQI-YC0MCfH/view) |
 | 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1-8SM5pMs8vOZSLXxOH3wCtGWIl2ycoSL/view) |
 
-En cuanto a los otros hiperparámetros, tomamos las siguientes decisiones.
+En cuanto a los otros hiperparámetros, tomamos las siguientes decisiones:
 
-- Decidimos dejar las epochs que venían por defecto en la notebook otorgada, por un tema de tiempo de cómputo, además de que observamos que la loss comenzaba a mantenerse bastante estable y no parecía tener mucha proyección a disminuir en futuras epochs.
-- En cuanto al learning rate, corrimos un hyperopt con algunas iteraciones y el resultado obtenido (aprox 0.015) fue muy cercano al learning rate que venía por defecto en la notebook otorgada. Corrimos algunos experimentos con el learning rate obtenido y la diferencia era prácticamente nula, entonces a fines de poder comparar entre los distintos experimentos que ya habíamos realizado, decidimos mantener este parámetro en 0.02.
-- No se me ocurre acá como explicar bien porque mantuvimos el batch size como venía.
+- En cuanto al `learning rate`, corrimos un `hyperopt` con algunas iteraciones y el resultado obtenido (aproximadamente $0.015$) fue muy cercano al `learning rate` que elegimos inicialmente de $0.02$. Corrimos algunos experimentos con el learning rate obtenido del `hyperopt` y la diferencia era prácticamente nula, entonces a fines de poder comparar entre los distintos experimentos que ya habíamos realizado, decidimos mantener este parámetro en $0.02$.
+- Para la definición de cantidad de `epochs`, luego de correr varios experimentos, como se puede ver en la figura 2, notamos que luego de aproximadamente las $20$ épocas, ya no se observa una disminución significativa en la función de pérdida, por lo que decimos dejar este hiperparámetro en $40$ ya que era el doble de dónde veíamos cierto estancamiento en la función de pérdida pero aún manteníamos un tiempo de entrenamiento bastante bajo que nos permitiera experimentar de manera rápida.
+- Con respecto al `batch size` decimos dejar el tamaño que venía dado en el notebook de ejemplo del clasificador y no tuvimos necesidad de alterarlo. 
 
-Para no tener solamente una diferencia de audio como referencia, también observamos como difieren tanto la waveform como el espectograma de la canción original, con los de los distintos audios encodeados y luego decodeados, observados en la tabla. Estos fueron los resultados:
+![Función de pérdida en validación para cada época](val_loss_final_exp.png){ width=450px }
 
-Acá pondría las imagenes de los waveforms y de los espectogramas, primero el del original y despues el de los demás en orden decreciente.
+Para no solo evaluar la eficiencia del autoencoder en base a cómo se escucha el audio, también observamos como difieren tanto la waveform como el espectograma de la canción original con los de los distintos audios encodeados y luego decodeados, observados en la tabla. Estos fueron los resultados:
 
-Observando y escuchando, decidimos quedarnos como "vector de mínimo tamaño posible" el de 1x18376, ya que consideramos que mantiene una similitud razonable con el audio original, a diferencia de el vector de 1x9184, que es prácticamente inentendible. Con esto, ya podemos avanzar a un análisis exploratorio de los vectores latentes obtenidos.
+**ACA PONER LAS IMAGENES DE WAVEFORM Y ESPECTOGRAMA**
+
+Observando y escuchando, decidimos quedarnos como "vector de mínimo tamaño posible" el de 1x18376, ya que consideramos que mantiene una similitud razonable con el audio original, a diferencia del vector de 1x9184, que es prácticamente irreconocible. Con esto, ya podemos avanzar a un análisis exploratorio de los vectores latentes obtenidos.
+
+[^1]: Deep Autoencoders for Music Compression and Genre Classification. [$\textcolor{blue}{link}$](https://www.pgrady.net/music-compression-web/)
 
 # Análisis exploratorio de vectores latentes
 
 Para el análisis exploratorio de los vectores latentes procedimos a probar distintos métodos vistos a la largo de la materia que nos permita adquirir información interesante.
 
-En primer lugar, exploramos qué resultaba de hacer un clustering con `k-medias`. Para ello, ejecutamos el algoritmo de la libería `sklearn` con valores crecientes de `k` para evaluar cómo varía la función que mide la variabilidad intra cluster para poder observar en cuántos clusters se podría dividir los vectores latentes, con la expectativa que sea una cantidad similar a la cantidad de géneros a los que pertenecen las canciones. Como se puede ver en la figura 2, aún con `k` igual a $40$ el modelo sigue con valores elevados de la función objetivo, y no se logra obervar ningún "codo" en el gráfico. Por lo tanto, es claro notar que aún los vectores latentes más chicos (de 9k), tienen demasiados atributos y por ende muchas dimensiones para que el algoritmo de `k-medias` puede encontrar una clustering relativamente chico. Por ese motivo, procedemos a analizar otras opciones.
+En primer lugar, exploramos qué resultaba de hacer un clustering con `k-medias`. Para ello, ejecutamos el algoritmo de la libería `sklearn` con valores crecientes de `k` para evaluar cómo varía la función que mide la variabilidad intra cluster para poder observar en cuántos clusters se podría dividir los vectores latentes, con la expectativa que sea una cantidad similar a la cantidad de géneros a los que pertenecen las canciones. Como se puede ver en la figura 3, aún con `k` igual a $40$ el modelo sigue con valores elevados de la función objetivo, y no se logra obervar ningún "codo" en el gráfico. Por lo tanto, es claro notar que aún los vectores latentes más chicos (de 1x9184), tienen demasiados atributos y por ende muchas dimensiones para que el algoritmo de `k-medias` puede encontrar una clustering relativamente chico. Por ese motivo, procedemos a analizar otras opciones.
 
-![Variabilidad intra clusters a medida que aumenta k (para los vectores latentes de dimensión 18376)](../analysis/k-means_elbow_lv=18K.png){ width=450px }
+![Variabilidad intra clusters a medida que aumenta k (para los vectores latentes de 1x18376)](../analysis/k-means_elbow_lv=18K.png){ width=450px }
 
 Otro de los métodos que realizamos en esta exploración, es la análisis de componentes principales (PCA). Para ello, utilizamos el método ya provisto en `sklearn.decomposition` para ejecutar el análisis, habiendo previamente escalado los valores de los vectores, como se suele hacer antes de realizar un PCA.
 
 ![Vectores latentes graficados en sus 3 principales componentes](../analysis/pca_3D_all.png)
 
-Para observar resultado del análisis, decidimos graficar los vectores en el nuevo espacio vectorial dado las 3 componentes principales. Como podemos observar en la figura 3, para ninguno de los tamaños de vectores latentes ni para el original se observa una diferenciación clara entre las canciones. Esto muy probablemente se deba al mismo motivo por el que no funcionó `k-medias` dada la gran cantidad de atributos. Sin embargo, podemos notar que los "outliers" que se observan suelen ser los mismos para los diferentes tamaños de vectores latentes (canciones 61, 21 y 54 particularmente). Al escuchar estas canciones, no notamos ninguna característica que nos dé indicio del motivo de su diferenciación con respectoa a las demás canciones. Sin embargo, que coincidan los outliers nos da la idea que a pesar de ser vectores latentes encodeades con diferentes arquitecturas, conservan cierta información de manera similar.
+Para observar resultado del análisis, decidimos graficar los vectores en el nuevo espacio vectorial dado las 3 componentes principales. Como podemos observar en la figura 4, para ninguno de los tamaños de vectores latentes ni para el original se observa una diferenciación clara entre las canciones. Esto muy probablemente se deba al mismo motivo por el que no funcionó `k-medias` dada la gran cantidad de atributos. Sin embargo, podemos notar que los "outliers" que se observan suelen ser los mismos para los diferentes tamaños de vectores latentes (canciones 61, 21 y 54 particularmente). Al escuchar estas canciones, no notamos ninguna característica que nos dé indicio del motivo de su diferenciación con respectoa a las demás canciones. Sin embargo, que coincidan los outliers nos da la idea que a pesar de ser vectores latentes encodeades con diferentes arquitecturas, conservan cierta información de manera similar.
 
 Por último, para poder observar si la información relevante para la clasificación en géneros de las canciones se ve afectada o no por el proceso de codificación, procedemos a realizar para cada tamaño de vector latente y el vector original árboles de decisión para entrenar la clasificación de las canciones en géneros con `sklearn.tree`. Entrenando este clasificador, buscamos poder detectar cuáles y cuántos atributos utiliza el clasificador. Obtenemos esta información mediante el método `feature_importances_` y gráficamos en orden descente los atributos, en este caso coordenadas del vector, según su aporte en la clasificación en entrenamiento.
 
 ![Importancia de atributos a partir de un árbol de decisión para cada tamaño de vector](../analysis/decision_tree_all.png)
 
-Como se puede observar en la figura 4, para el vector original y todos los tamaños de vectores latentes, se utilizan sólo entre 14 y 23 coordenadas de los vectores para la clasificación del género de las canciones. Por esta razón, podríamos suponer que la información relevante relacionada al género de las canciones se condensa en promedio en 20 atributos sin importar el tamaño del vector. Este aspecto parece relevante al cosiderar que los vectores latentes fueron obtenidos a tráves de encoders distintos y aún sí conservan información en común, como sucedió con los outliers del análisis de componentes principales.
+Como se puede observar en la figura 5, para el vector original y todos los tamaños de vectores latentes, se utilizan sólo entre 14 y 23 coordenadas de los vectores para la clasificación del género de las canciones. Por esta razón, podríamos suponer que la información relevante relacionada al género de las canciones se condensa en promedio en 20 atributos sin importar el tamaño del vector. Este aspecto parece relevante al cosiderar que los vectores latentes fueron obtenidos a tráves de encoders distintos y aún sí conservan información en común, como sucedió con los outliers del análisis de componentes principales.
 
 # Encodeo de música nueva
 
@@ -103,12 +111,11 @@ Para esto realizamos el forward en testing con la red entrenada, nos guardamos l
 
 |    Vector latente     |   |
 |:----------------------|--:|
-| 1x110250 (Original)   | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/13dINLPdNFMA_Rz2TYi6Tr5xfH0_xIw-c/view) |
-| 1x55112               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1cnege9wbLe6OsE1E8LDJliZn1zqfrBRD/view) |
-| 1x32151               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1jql5XVD3KKCA10C2dFdnZXvLSiJ9QSPX/view) |
-| 1x24496               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1UY3wKQtwLF5gk3JVnVQCwwSjJQL_2Dgl/view) |
-| 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1he1mJwi92Qtt95sVPn0LRAQI-YC0MCfH/view) |
-| 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1-8SM5pMs8vOZSLXxOH3wCtGWIl2ycoSL/view) |
+| 1x55112               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1GbzApWBG1a66m9W4T1HZvjhLXoeMHter/view) |
+| 1x32151               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1oCOWgZ_WdHu3p_gRbIvuM33tBpB5aZmM/view) |
+| 1x24496               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1ZDu6qpxWOuQJaAKdgJoBt7mQcrMashZ0/view) |
+| 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1YD1UZgzRxDhVQ0ZORYNsZu5fwHd4uhmy/view) |
+| 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/10NIcfuT6-yWLFH12GHkXG1L99G-PZMlj/view) |
 
 ## Generando nuevos vectores latentes de manera aleatoria
 
@@ -116,17 +123,8 @@ Para este test, generamos vectores aleatorios del tamaño que quedan los vectore
 
 |    Vector latente     |   |
 |:----------------------|--:|
-| 1x110250 (Original)   | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/13dINLPdNFMA_Rz2TYi6Tr5xfH0_xIw-c/view) |
-| 1x55112               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1cnege9wbLe6OsE1E8LDJliZn1zqfrBRD/view) |
-| 1x32151               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1jql5XVD3KKCA10C2dFdnZXvLSiJ9QSPX/view) |
-| 1x24496               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1UY3wKQtwLF5gk3JVnVQCwwSjJQL_2Dgl/view) |
-| 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1he1mJwi92Qtt95sVPn0LRAQI-YC0MCfH/view) |
-| 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1-8SM5pMs8vOZSLXxOH3wCtGWIl2ycoSL/view) |
-
-# Cosas que faltan
-
-- En 1: 
-    - justificar mejor elección de epoch (ya está la imagen)
-    - Hacer referente a que los parametros de la arquitectura en el notebook
-    - Batchsize saraza
-    - sin negro el fondo de la arquitectura
+| 1x55112               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1ZZ_jml79Nk6voNISIuw5nXTfR4TvsthU/view) |
+| 1x32151               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1FAEr4QH9PJjUbuwLUootrOfwYAH9aEd8/view) |
+| 1x24496               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1OMTeYrs7YOpGZQh31Nu6vFH0epTKwklg/view) |
+| 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1VOV0NYzTuU4uvJcTBezbdbIv0k_iX4LE/view) |
+| 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1mu0pJpnqd2mh4wsYPQ5ODeVTZ4SpNw_2/view) |
