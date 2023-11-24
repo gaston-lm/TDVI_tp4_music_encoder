@@ -64,6 +64,37 @@ Por último, para poder observar si la información relevante para la clasificac
 
 ![Importancia de atributos a partir de un árbol de decisión para cada tamaño de vector](../analysis/decision_tree_all.png)
 
+DecisionTree a secas:
+
+|    Vector latente     | Test Accuracy |
+|:----------------------|--------------:|
+| 1x110250 (Original)   |          0.17 |
+| 1x55112               |          0.26 |
+| 1x32151               |          0.13 |
+| 1x24496               |          0.13 |
+| 1x18376               |          0.24 |
+| 1x9184                |          0.15 |
+
+DecisionTree después de PCA:
+|    Vector latente     | Test Accuracy |
+|:----------------------|--------------:|
+| 1x110250 (Original)   |          0.29 |
+| 1x55112               |          0.29 |
+| 1x32151               |          0.16 |
+| 1x24496               |          0.29 |
+| 1x18376               |          0.22 |
+| 1x9184                |          0.23 |
+
+DecisionTree después de PCA (con test escalado BIEN):
+|    Vector latente     | Test Accuracy |
+|:----------------------|--------------:|
+| 1x110250 (Original)   |          0.24 |
+| 1x55112               |          0.10 |
+| 1x32151               |          0.12 |
+| 1x24496               |          0.31 |
+| 1x18376               |          0.16 |
+| 1x9184                |          0.11 |
+
 Como se puede observar en la figura 5, para el vector original y todos los tamaños de vectores latentes, se utilizan sólo entre 14 y 23 coordenadas de los vectores para la clasificación del género de las canciones. Por esta razón, podríamos suponer que la información relevante relacionada al género de las canciones se condensa en promedio en 20 atributos sin importar el tamaño del vector. Este aspecto parece relevante al cosiderar que los vectores latentes fueron obtenidos a tráves de encoders distintos y aún sí conservan información en común, como sucedió con los outliers del análisis de componentes principales.
 
 # Encodeo de música nueva
