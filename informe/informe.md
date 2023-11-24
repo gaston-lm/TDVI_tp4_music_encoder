@@ -41,7 +41,16 @@ Observando y escuchando, decidimos quedarnos como "vector de mínimo tamaño" el
 
 # Análisis exploratorio de vectores latentes
 
-Aca tonga la tenés mucho mas clara vos, igual mañana lo charlamos pero no quería dejar de redactar al menos un poco de lo q pense del punto 3 para tener al menos la idea.
+Para el análisis exploratorio de los vectores latentes procedimos a probar distintos métodos.
+
+En primer lugar, exploramos que resultaba de hacer un clustering con `k-medias`. Para ello, ejecutamos el algoritmo de la libería `sklearn` con valores crecientes de K para evaluar cómo varía la función que mide las distancias a los centroides (within groups sums of squares) para poder observar en cuántos clusters se podría dividir los vectores latentes, con la expectativa que sea una cantidad similar a los géneros a los que pertenecen las canciones. Como se puede ver en la figura 2, aún con `k` igual a $40$ el modelo sigue con una within groups sums of squares muy alta, y no se logra obervar ningún "codo" en el gráfico. Por lo tanto, es claro notar que aún con los vectores latentes más chicos (de 9k), son demasiados atributos y por ende muchas dimensiones para que el algoritmo de `k-medias` puede encontrar una clustering relativamente chico. Por ese motivo, procedemos a analizar otras opciones.
+
+![Within groups sums of squares a medidad de aumenta k](../analysis/k-means_elbow_lv=55K.png)
+
+Para no olvidarme:
+
+- Explicar el decision tree (con las imagenes que se vea que son todos parecidos en una sola imagen, 5 es un monton)
+- PCA, explicar que por un motivo similar a k-means no sirve mucho pero del analisis sale que parece que los outliers son iguales en casi todos los vectores latentes lo cual es bueno pq significa que está capatando la misma información a pesar de haber sido encodeados de diferentes maneras.
 
 # Encodeo de música nueva
 
