@@ -151,7 +151,9 @@ Para esto realizamos el forward en testing con la red entrenada, nos guardamos l
 
 En los resultados, se nota la presencia de las canciones pero no queda nada muy coherente, por lo que probamos a utilizar todas canciones del mismo género, obteniendo lo siguiente.
 
-Como nos funcionó un poco mejor, quisimos llevarlo un poco al extremo y probar que sucedería si en lugar de utilizar solo tres canciones, poníamos todas las canciones del mismo género y logramos los siguientes resultados.
+Como nos funcionó un poco mejor, quisimos llevarlo un poco al extremo y probar que sucedería si en lugar de utilizar solo tres canciones, poníamos todas las canciones del género que hay en el dataset y logramos los siguientes resultados.
+
+A modo de ejemplo en estas tablas utilizamos el genero Jazz, ya que nos pareció el mas interesante, pero en la notebook se puede cambiar el género y escuchar los resultados para cualquiera de los géneros en el dataset.
 
 ## Generando nuevos vectores latentes de manera aleatoria
 
