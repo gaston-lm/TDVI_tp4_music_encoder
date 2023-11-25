@@ -119,7 +119,6 @@ Tras el siguiente proceso pudimos encodear música nueva.
 
 Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nuestro nuevo audio funcionaba con el sample rate de 20500 tras hacer el resampling, lo cual nos da mas certeza de que nuestra hipótesis sobre la diferencia del tamaño es correcta.
 
-
 |    Vector latente     |   |
 |:----------------------|--:|
 | 2x220500 (Original)        | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/187JI_48yZ3JzzCX7yFjkjbNhRiXs7XL8/view) |
@@ -129,6 +128,8 @@ Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nues
 | 1x24496                    | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1kFnFMuga7pXgirngLSn2yKPYXz7MXXCM/view) |
 | 1x18376                    | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1iKh6sA3N_pj4wPND89SY3ncuAebUHag-/view) |
 | 1x9184                     | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1vzabQcLiIM83eEDDUIXcQQewkxDjrhkz/view) |
+
+A modo de ejemplo, en la tabla hay uno solo de los audios que probamos, pero en la notebook se pueden probar los 4 audios que probamos, intentando que sean de distintos generos (rap, trap, disco, house) para ver como se comportaban. Los resultados fueron similares.
 
 # Generación de música nueva
 
@@ -147,6 +148,10 @@ Para esto realizamos el forward en testing con la red entrenada, nos guardamos l
 | 1x24496               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1ZDu6qpxWOuQJaAKdgJoBt7mQcrMashZ0/view) |
 | 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1YD1UZgzRxDhVQ0ZORYNsZu5fwHd4uhmy/view) |
 | 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/10NIcfuT6-yWLFH12GHkXG1L99G-PZMlj/view) |
+
+En los resultados, se nota la presencia de las canciones pero no queda nada muy coherente, por lo que probamos a utilizar todas canciones del mismo género, obteniendo lo siguiente.
+
+Como nos funcionó un poco mejor, quisimos llevarlo un poco al extremo y probar que sucedería si en lugar de utilizar solo tres canciones, poníamos todas las canciones del mismo género y logramos los siguientes resultados.
 
 ## Generando nuevos vectores latentes de manera aleatoria
 
