@@ -9,15 +9,15 @@ lang: "es"
 
 # Encodear canciones en vectores latentes
 
-Para este primer inciso, dado que en principio no teníamos mucha información acerca de qué tipo de estructuras de redes eran convenientes para este tipo de problemas, nos enfocamos en primer lugar de tener un código del modelo y entrenamiento que funcione correctamente. Una vez alcanzado ese objetivo, procedimos a probar algunas ideas registrando los experimentos con la herramienta `wandb`.
+Para este primer inciso, dado que en principio no teníamos mucha información acerca de qué tipo de estructuras de redes eran convenientes para este tipo de problemas, nos enfocamos en primer lugar de tener un código del modelo y entrenamiento que funcione correctamente. Una vez alcanzado ese objetivo, procedimos a probar algunas ideas registrando los experimentos con `wandb`.
 
-Luego de un poco de investigación acerca de autoencoders para audio[^1] y algunos experimentos más, concluimos en una arquitectura de una red sencilla, muy similar a los autoencoders vistos en clase, utilizando la estructura que se puede ver en la figura 1.
+Luego de un poco de investigación acerca de autoencoders para audio[^1] y algunos experimentos más, concluimos en una arquitectura de una red sencilla, muy similar a los autoencoders vistos en clase, utilizando la estructura que se puede ver en la figura 1. Como funciones de activación, decimos utilizar para todas las capaz la función Tangente hiperbólica (`Tanh()` en Torch) dado que observando las waveforms de los audios, notamos que era necesario utilizar alguna función de activación que mantuviera los valores en el rango $[-1,1]$ como lo hace la función elegida ya que si no estaríamos perdiendo información relevante al encodear las canciones.
 
 ![Estructura autoencoder](estructura_white.png){ width=350px }
 
-Principalmente, pudimos identificar que una de las consideraciones más importantates a tener en cuenta era la forma en la que se reducía la dimensionalidad a lo largo de las capas covolucionales. Realizar en primera instancia una capa que aumentara la dimensión a más de 1x110250, ya sea por muchos canales de salida o por un stride chico, para luego reducirla abruptamente en las siguientes dos capas, generaba bastante ruido. En cambio, hacer que la primera capa tal vez no reduzca casi nada la dimensionalidad, pero sí reorganice la información en varios canales para luego reducir la dimensionalidad en las siguientes dos capas genera mejores resultados. 
+Principalmente, pudimos identificar que una de las consideraciones más importantates a tener en cuenta era la forma en la que se reducía la dimensionalidad a lo largo de las capas covolucionales. Realizar en primera instancia una capa que aumentara la dimensión a más de `1x110250`, ya sea por muchos canales de salida o por un stride chico, para luego reducirla abruptamente en las siguientes dos capas, generaba bastante ruido. En cambio, hacer que la primera capa tal vez no reduzca casi nada la dimensionalidad, pero sí reorganice la información en varios canales para luego reducir la dimensionalidad en las siguientes dos capas generó mejores resultados. 
 
-Esta estrategia de ir disminuyendo de a poco o mantener los canales a lo largo de la red, para finalmente flattenear el vector y obtener así nuestro vector latente, nos dio en general buenas codificaciones. Por ese motivo, seguimos con esta estrategia pero modificando los parámetros de la convoluciones (`output_channels`, `input_channels`, `stride`, `kernel_size` y `stride`). Por esta razón, por fines prácticos y de facilidad de probar varias alternativas, generamos variables en el código que definen estos hiperparámetros de las capas convolucionales.
+Esta estrategia de ir disminuyendo de a poco o mantener los canales a lo largo de la red, para finalmente flattenear el tensor y obtener así nuestro vector latente, nos dio en general buenas codificaciones. Por ese motivo, seguimos con esta estrategia pero modificando los parámetros de la convoluciones (`output_channels`, `input_channels`, `stride`, `kernel_size` y `stride`). Por esta razón, por fines prácticos y de facilidad de probar varias alternativas, generamos variables en el código que definen estos hiperparámetros de las capas convolucionales.
 
 Con distintas combinaciones de los hiperparámetros de las capas convolucionales realizamos experimentos que dejaran vectores latentes de distintos tamaños, hasta llegar al punto de que la canción sea prácticamente irreconocible. Los audios resultantes se pueden ver en la siguiente tabla, que utiliza la canción Music de Maddona como ejemplo.
 
@@ -38,11 +38,13 @@ En cuanto a los otros hiperparámetros, tomamos las siguientes decisiones:
 
 ![Función de pérdida en validación para cada época](val_loss_final_exp.png){ width=450px }
 
-Para no solo evaluar la eficiencia del autoencoder en base a cómo se escucha el audio, también observamos como difieren tanto la waveform como el espectograma de la canción original con los de los distintos audios encodeados y luego decodeados, observados en la tabla. Estos fueron los resultados:
+Para no solo evaluar la eficiencia del autoencoder en base a cómo se escucha el audio, también observamos como difieren tanto la waveform como el espectograma de la canción original con los de los distintos audios encodeados y luego decodeados, observados en la tabla. Se pueden ver los resultados en las figuras 3 y 4.
 
-**ACA PONER LAS IMAGENES DE WAVEFORM Y ESPECTOGRAMA**
+![Espectrogramas para cada tamaño de vector latente y el original (canción Music de Madonna)](spectogramas.png)
 
-Observando y escuchando, decidimos quedarnos como "vector de mínimo tamaño posible" el de 1x18376, ya que consideramos que mantiene una similitud razonable con el audio original, a diferencia del vector de 1x9184, que es prácticamente irreconocible. Con esto, ya podemos avanzar a un análisis exploratorio de los vectores latentes obtenidos.
+![Waveforms para cada tamaño de vector latente y el original (canción Music de Madonna)](waveforms.png)
+
+Observando y escuchando, decidimos quedarnos como "vector de mínimo tamaño posible" el de `1x18376`, ya que consideramos que mantiene una similitud razonable con el audio original, a diferencia del vector de `1x9184`, que es prácticamente irreconocible. Con esto, ya podemos avanzar a un análisis exploratorio de los vectores latentes obtenidos.
 
 [^1]: Deep Autoencoders for Music Compression and Genre Classification. [$\textcolor{blue}{link}$](https://www.pgrady.net/music-compression-web/)
 
@@ -50,7 +52,7 @@ Observando y escuchando, decidimos quedarnos como "vector de mínimo tamaño pos
 
 Para el análisis exploratorio de los vectores latentes procedimos a probar distintos métodos vistos a la largo de la materia que nos permita adquirir información interesante.
 
-En primer lugar, exploramos qué resultaba de hacer un clustering con `k-medias`. Para ello, ejecutamos el algoritmo de la libería `sklearn` con valores crecientes de `k` para evaluar cómo varía la función que mide la variabilidad intra cluster para poder observar en cuántos clusters se podría dividir los vectores latentes, con la expectativa que sea una cantidad similar a la cantidad de géneros a los que pertenecen las canciones. Como se puede ver en la figura 3, aún con `k` igual a $40$ el modelo sigue con valores elevados de la función objetivo, y no se logra obervar ningún "codo" en el gráfico. Por lo tanto, es claro notar que aún los vectores latentes más chicos (de 1x9184), tienen demasiados atributos y por ende muchas dimensiones para que el algoritmo de `k-medias` puede encontrar una clustering relativamente chico. Por ese motivo, procedemos a analizar otras opciones.
+En primer lugar, exploramos qué resultaba de hacer un clustering con `k-medias`. Para ello, ejecutamos el algoritmo de la libería `sklearn` con valores crecientes de `k` para evaluar cómo varía la función que mide la variabilidad intra cluster para poder observar en cuántos clusters se podría dividir los vectores latentes, con la expectativa que sea una cantidad similar a la cantidad de géneros a los que pertenecen las canciones. Como se puede ver en la figura 3, aún con `k` igual a $40$ el modelo sigue con valores elevados de la función objetivo, y no se logra obervar ningún "codo" en el gráfico. Por lo tanto, es claro notar que aún los vectores latentes más chicos (de `1x9184`), tienen demasiados atributos y por ende muchas dimensiones para que el algoritmo de `k-medias` puede encontrar una clustering relativamente chico. Por ese motivo, procedemos a analizar otras opciones.
 
 ![Variabilidad intra clusters a medida que aumenta k (para los vectores latentes de 1x18376)](../analysis/k-means_elbow_lv=18K.png){ width=450px }
 
@@ -112,12 +114,10 @@ Tras el siguiente proceso pudimos encodear música nueva.
 1. Entrenar la red normalmente, con el dataset otorgado.
 2. Nuestro audio era stereo (2 channels) así que lo pasamos a mono con un convertidor online.
 3. Una vez convertido a mono, cortamos un fragmento de 5 segundos con el código provisto.
-4. Así, el vector era de tamaño 1x1x220500, que no cumple con las características que necesita la red (1x1x110250). Nuestra hipótesis es que esta diferencia en tamaño se debe a que el sample rate es 44100 en lugar de 20500 como los audios del dataset, justamente el doble de sample rate, el doble de tamaño. Para solventarlo, utilizamos la función de Resampling de PyTorch, obteniendo así un vector con las características necesarias. 
+4. Así, el vector de tamaño `1x220500`, que no cumple con las características que necesita la red (`1x110250`). Nuestra hipótesis es que esta diferencia en tamaño se debe a que el sample rate es $44100$ en lugar de $20500$ como los audios del dataset, justamente el doble de sample rate, el doble de tamaño. Para resolverlo, utilizamos la función de `resampling()` de PyTorch, obteniendo así un vector con las características necesarias. 
 5. Realizamos un forward en la red con nuestro vector de audio nuevo una vez que cumplía las características necesarias.
 6. Obtuvimos el audio reconstruido, así como su espectograma y waveform.
 7. Repetimos el proceso para distintos tamaños de vectores latentes y obtuvimos los que se pueden ver en la siguiente tabla.
-
-Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nuestro nuevo audio funcionaba con el sample rate de 20500 tras hacer el resampling, lo cual nos da mas certeza de que nuestra hipótesis sobre la diferencia del tamaño es correcta.
 
 |    Vector latente     |   |
 |:----------------------|--:|
@@ -129,13 +129,15 @@ Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nues
 | 1x18376                    | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1iKh6sA3N_pj4wPND89SY3ncuAebUHag-/view) |
 | 1x9184                     | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1vzabQcLiIM83eEDDUIXcQQewkxDjrhkz/view) |
 
-A modo de ejemplo, en la tabla hay uno solo de los audios que probamos, pero en la notebook se pueden probar los 4 audios que probamos, intentando que sean de distintos generos (rap, trap, disco, house) para ver como se comportaban. Los resultados fueron similares.
+A modo de ejemplo, en la tabla hay sólo uno de los audios que probamos pero en la notebook se pueden probar los 4 audios que probamos, intentando que sean de distintos generos (rap, trap, disco, house) para ver como se comportaban. Los resultados fueron similares.
+
+Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nuestro nuevo audio funcionaba con el sample rate de 20500 tras hacer el `resampling()`, lo cual nos da mas certeza de que nuestra hipótesis sobre la diferencia del tamaño es correcta.
 
 # Generación de música nueva
 
 Hemos visto en clase como este tipo de autoencoders que hemos programado, no son lo mejor para generar algo nuevo. Es por eso, que han surgido otros modelos, como pueden ser VAE o GAN. Sin embargo, se pueden probar cosas como generar vectores random del tamaño del espacio latente y pasarlos por el decoder o incluso promediar vectores latentes de otras canciones y decodearlos. 
 
-Este tipo de cosas son las que probamos hacer y, si bien lo obtenido no es lo mas satisfactorio, logramos generar audio completamente nuevo a partir de nuestra red.
+Este tipo de experimentaciones son las que probamos hacer y, si bien lo obtenido no es lo mas satisfactorio, logramos generar audio completamente nuevo a partir de nuestra red.
 
 ## Promediando vectores latentes de canciones existentes y decodeandolos
 
@@ -151,9 +153,25 @@ Para esto realizamos el forward en testing con la red entrenada, nos guardamos l
 
 En los resultados, se nota la presencia de las canciones pero no queda nada muy coherente, por lo que probamos a utilizar todas canciones del mismo género, obteniendo lo siguiente.
 
+|    Vector latente     |   |
+|:----------------------|--:|
+| 1x55112               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1HkZTkIVuLNim9CrjFuC3W-1WVvb0MaR1/view) |
+| 1x32151               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1M2l1irHORme9SEk-0DVxJGdT-9NUuKcL/view) |
+| 1x24496               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/13fRQQuwi3AoHNCtTTphjSR6B2FG-uLX5/view) |
+| 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1IYqgbLDOgO2EEPvuwmnWQ68D-eolSmlF/view) |
+| 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1iiiwaQ0RN8edo8b01Ckd_J8parj2Oev-/view) |
+
 Como nos funcionó un poco mejor, quisimos llevarlo un poco al extremo y probar que sucedería si en lugar de utilizar solo tres canciones, poníamos todas las canciones del género que hay en el dataset y logramos los siguientes resultados.
 
-A modo de ejemplo en estas tablas utilizamos el genero Jazz, ya que nos pareció el mas interesante, pero en la notebook se puede cambiar el género y escuchar los resultados para cualquiera de los géneros en el dataset.
+|    Vector latente     |   |
+|:----------------------|--:|
+| 1x55112               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1kfC0EV-RAfelz72hA8Rv4q-xDkDkxvvb/view) |
+| 1x32151               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1b6DQwjYp7NopbCYL5t-oFBtbLUmGa9db/view) |
+| 1x24496               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1Wsy7OBQwa33Vu4qzdtF9uUtpSOQ3bH3v/view) |
+| 1x18376               | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1XhoDOBk_TPkoZewNWry86IwgvbqH0rbm/view) |
+| 1x9184                | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1f9DlYC9T6FIDAMAL7kPJqrJ6KvSH5x_Q/view) |
+
+A modo de ejemplo en estas tablas utilizamos el genero jazz, ya que nos pareció el mas interesante, pero en la notebook se puede cambiar el género y escuchar los resultados para cualquiera de los géneros en el dataset.
 
 ## Generando nuevos vectores latentes de manera aleatoria
 
