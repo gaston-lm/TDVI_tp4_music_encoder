@@ -11,7 +11,7 @@ lang: "es"
 
 Para este primer inciso, dado que en principio no teníamos mucha información acerca de qué tipo de estructuras de redes eran convenientes para este tipo de problemas, nos enfocamos en primer lugar de tener un código del modelo y entrenamiento que funcione correctamente. Una vez alcanzado ese objetivo, procedimos a probar algunas ideas registrando los experimentos con `wandb`.
 
-Luego de un poco de investigación acerca de autoencoders para audio[^1] y algunos experimentos más, concluimos en una arquitectura de una red sencilla, muy similar a los autoencoders vistos en clase, utilizando la estructura que se puede ver en la Figura 1. Como funciones de activación, decimos utilizar para todas las capas la función Tangente hiperbólica (`Tanh()` en PyTorch) dado que observando las waveforms de los audios, notamos que era necesario utilizar alguna función de activación que mantuviera los valores en el rango $[-1,1]$ como lo hace la función elegida ya que si no estaríamos perdiendo información relevante al encodear las canciones.
+Luego de un poco de investigación acerca de autoencoders para audio[^1] y algunos experimentos más, concluimos en una arquitectura de una red sencilla, muy similar a los autoencoders vistos en clase, utilizando la estructura que se puede ver en la Figura 1. Como funciones de activación, decidimos utilizar para todas las capas la función Tangente hiperbólica (`Tanh()` en PyTorch) dado que observando las waveforms de los audios, notamos que era necesario utilizar alguna función de activación que mantuviera los valores en el rango $[-1,1]$ como lo hace la función elegida ya que si no estaríamos perdiendo información relevante al encodear las canciones.
 
 ![Estructura autoencoder](img/estructura_white.png){ width=350px }
 
@@ -69,7 +69,7 @@ Podemos notar que si bien no hay diferencias significativas en el score de homog
 
 Otro de los métodos que realizamos en esta exploración es la análisis de componentes principales (PCA). Para ello, utilizamos el método ya provisto en `sklearn.decomposition` para ejecutar el análisis, habiendo previamente escalado los valores de los vectores, como se suele hacer antes de realizar un PCA.
 
-![Vectores latentes graficados en sus 3 principales componentes](../analysis/pca_3D_all.png)
+![Vectores latentes graficados en sus 3 principales componentes](../analysis/pca_3D_all.png){ width=550px }
 
 Para observar resultado del análisis, decidimos graficar los vectores en el nuevo espacio vectorial dado las 3 componentes principales. Como podemos observar en la Figura 6, para ninguno de los tamaños de vectores latentes ni para el original se observa una diferenciación clara entre las canciones. Esto muy probablemente se deba al mismo motivo por el que no funcionó `k-medias`. Dada la gran cantidad de atributos, se vuelve dificil poder visualizarlos en tan solo 3 dimensiones.
 
@@ -122,7 +122,11 @@ A modo de ejemplo, en la tabla hay sólo uno de los audios que probamos pero en 
 
 Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nuestro nuevo audio funcionaba con el sample rate de 20500 tras hacer el `resampling()`, lo cual nos da mas certeza de que nuestra hipótesis sobre la diferencia del tamaño es correcta.
 
-Al igual que para la música original del dataset, obtuvimos los espectogramas y waveforms del audio resampleado sin pasar por la red y del resultante de decodear los distintos vectores latentes, para poder observar la diferencia entre los distintos audios no solo de manera auditiva si no también visual. Se puede ver en las figuras ? y ?.
+Al igual que para la música original del dataset, obtuvimos los espectogramas y waveforms del audio resampleado sin pasar por la red y del resultante de decodear los distintos vectores latentes, para poder observar la diferencia entre los distintos audios no solo de manera auditiva si no también visual. Se puede ver en las Figuras 7 y 8.
+
+![Espectrogramas para cada tamaño de vector latente y el original (canción Momma de Kendrick Lamar)](img/spectogramas_kendrick.png)
+
+![Waveforms para cada tamaño de vector latente y el original (canción Momma de Kendrick Lamar)](img/waveforms_kendric.png)
 
 # Generación de música nueva
 
