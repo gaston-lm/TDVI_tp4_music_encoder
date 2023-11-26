@@ -52,7 +52,7 @@ Observando y escuchando, decidimos quedarnos como "vector de mínimo tamaño pos
 
 Para el análisis exploratorio de los vectores latentes procedimos a probar distintos métodos vistos a la largo de la materia que nos permita adquirir información interesante.
 
-En primer lugar, exploramos qué resultaba de hacer un clustering con `k-medias`. Para ello, ejecutamos el algoritmo de la libería `sklearn` con valores crecientes de `k` para evaluar cómo varía la función que mide la variabilidad intra cluster para poder observar en cuántos clusters se podría dividir los vectores latentes, con la expectativa que sea una cantidad similar a la cantidad de géneros a los que pertenecen las canciones. Como se puede ver en la Figura 5, aún con `k` igual a $40$ el modelo sigue con valores elevados de la función objetivo, y no se logra obervar ningún "codo" en el gráfico. Por lo tanto, es claro notar que aún los vectores latentes más chicos (de `1x9184`), tienen demasiados atributos y por ende muchas dimensiones para que el algoritmo de `k-medias` puede encontrar una clustering relativamente chico. Por ese motivo, dado que el dataset cuenta con 10 géneros, procedemos a computar el algoritmo de todas formas con `k` iguala a $10$ y medir la completitud y homogeneidad entre el clustering resultante y las labels de géneros originales. Se pueden observar los resultados en la tabla a continuación.
+En primer lugar, exploramos qué resultaba de hacer un clustering con `k-medias`. Para ello, ejecutamos el algoritmo de la libería `sklearn` con valores crecientes de `k` para evaluar cómo varía la función que mide la variabilidad intra cluster para poder observar en cuántos clusters se podría dividir los vectores latentes, con la expectativa que sea una cantidad similar a la cantidad de géneros a los que pertenecen las canciones. Como se puede ver en la Figura 5, aún con `k` igual a $40$ el modelo sigue con valores elevados de la función objetivo, y no se logra obervar ningún "codo" en el gráfico. Por lo tanto, es claro notar que aún los vectores latentes más chicos (de `1x9184`), tienen demasiados atributos y por ende muchas dimensiones para que el algoritmo de `k-medias` puede encontrar una clustering relativamente chico. Por ese motivo, dado que el dataset cuenta con 10 géneros, procedimos a computar el algoritmo de todas formas con `k` igual a $10$ y medir la completitud y homogeneidad entre el clustering resultante y las labels de géneros originales, para ver si se acercaba a separar por género. Se pueden observar los resultados en la tabla a continuación.
 
 |    Vector latente     | Score Homogeneidad | Score Completitud |
 |:----------------------|-------------------:|------------------:|
@@ -65,13 +65,13 @@ En primer lugar, exploramos qué resultaba de hacer un clustering con `k-medias`
 
 ![Variabilidad intra clusters a medida que aumenta k (para los vectores latentes de 1x18376)](../analysis/k-means_elbow_lv=18K.png){ width=350px }
 
-Podemos notar que si bien no hay diferencias significativas en el score de homogeneidad ni de completitud, se puede ver una relativa disminución de los scores a medida que los vectores latentes son más chicos lo cual sostendría la idea de que además de escucharse peor los audios, también se pierde información para la clasificación de los géneros. Sin embargo, el impacto del tamaño del vector latente en los scores no es tan fuerte como esperábamos. Nuevamente, esto creemos que se debe a la gran dimensión de los vectores que el algoritmo de k-medias no logra diferenciar los clusters.
+Podemos notar que si bien no hay diferencias significativas en el score de homogeneidad ni de completitud, se puede ver una relativa disminución de los scores a medida que los vectores latentes son más chicos lo cual sostendría la idea de que además de escucharse peor los audios, también se pierde información para la clasificación de los géneros. Sin embargo, el impacto del tamaño del vector latente en los scores no es tan fuerte como esperábamos. Nuevamente, creemos que esto se debe a que la gran dimensión de los vectores dificulta al algoritmo de k-medias realizar buenos clusters.
 
 Otro de los métodos que realizamos en esta exploración es la análisis de componentes principales (PCA). Para ello, utilizamos el método ya provisto en `sklearn.decomposition` para ejecutar el análisis, habiendo previamente escalado los valores de los vectores, como se suele hacer antes de realizar un PCA.
 
 ![Vectores latentes graficados en sus 3 principales componentes](../analysis/pca_3D_all.png)
 
-Para observar resultado del análisis, decidimos graficar los vectores en el nuevo espacio vectorial dado las 3 componentes principales. Como podemos observar en la Figura 6, para ninguno de los tamaños de vectores latentes ni para el original se observa una diferenciación clara entre las canciones. Esto muy probablemente se deba al mismo motivo por el que no funcionó `k-medias` dada la gran cantidad de atributos.
+Para observar resultado del análisis, decidimos graficar los vectores en el nuevo espacio vectorial dado las 3 componentes principales. Como podemos observar en la Figura 6, para ninguno de los tamaños de vectores latentes ni para el original se observa una diferenciación clara entre las canciones. Esto muy probablemente se deba al mismo motivo por el que no funcionó `k-medias`. Dada la gran cantidad de atributos, se vuelve dificil poder visualizarlos en tan solo 3 dimensiones.
 
 Por último, para poder observar si la información relevante para la clasificación en géneros de las canciones se ve afectada o no por el proceso de codificación, procedemos a realizar para cada tamaño de vector latente y el vector original árboles de decisión para entrenar la clasificación de las canciones en géneros con `sklearn.tree`. Entrenamos este clasificador con aquellas canciones que estuvieron involucaras en la configuración de la red del autoencoder (sets de training y validación) y evaluamos con las que fueron usadas para evaluar el autoencoder. En la siguiente tabla se pueden ver los resultados de los experimentos.
 
@@ -111,7 +111,7 @@ Tras el siguiente proceso pudimos encodear música nueva.
 |       Vector latente       |                                                                                                    |
 |:---------------------------|---------------------------------------------------------------------------------------------------:|
 | 2x220500 (Original)        | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/187JI_48yZ3JzzCX7yFjkjbNhRiXs7XL8/view) |
-| 1x110250 (Original Mono)   | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1VqXBI28SHH_S5FwTK8ulkrXqhUEoBHRs/view) |
+| 1x110250 (Resampled Mono)   | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1VqXBI28SHH_S5FwTK8ulkrXqhUEoBHRs/view) |
 | 1x55112                    | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1zZUDSQ-4oow4DsLCeeUY6AXOMJ76ubYm/view) |
 | 1x32151                    | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1bX3rKy501_6wxxxxbSD5QDhI6VJj0P2s/view) |
 | 1x24496                    | [$\textcolor{blue}{link}$](https://drive.google.com/file/d/1kFnFMuga7pXgirngLSn2yKPYXz7MXXCM/view) |
@@ -121,6 +121,8 @@ Tras el siguiente proceso pudimos encodear música nueva.
 A modo de ejemplo, en la tabla hay sólo uno de los audios que probamos pero en la notebook se pueden probar los 4 audios que experimentamos, intentando que sean de distintos generos (rap, trap, disco, house) para ver como se comportaban. Los resultados fueron similares.
 
 Al final, no tuvimos que editar el valor de Sample Rate hardcodeado, ya que nuestro nuevo audio funcionaba con el sample rate de 20500 tras hacer el `resampling()`, lo cual nos da mas certeza de que nuestra hipótesis sobre la diferencia del tamaño es correcta.
+
+Al igual que para la música original del dataset, obtuvimos los espectogramas y waveforms del audio resampleado sin pasar por la red y del resultante de decodear los distintos vectores latentes, para poder observar la diferencia entre los distintos audios no solo de manera auditiva si no también visual. Se puede ver en las figuras ? y ?.
 
 # Generación de música nueva
 
